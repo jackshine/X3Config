@@ -1,5 +1,6 @@
 package com.example.x3config;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
@@ -77,7 +78,9 @@ public class ServerUdp_Q5 extends Thread {
     private final byte ST_CMD_SETBRIGHT = 199 - 256;
     private final byte ST_CMD_GETBRIGHT = 198 - 256;
 
+    //新增手机获取信息
     private final byte UPDATE_FPGA = 78;  //接收卡/发送卡程序升级
+    private final byte GET_FPGA_VERSION = 79;  //获取FPGA版本
     byte g_LastGammaRed = 32, g_LastGammaGreen = 32, g_LastGammaBlue = 32;
     int g_LastBright = 255;
 
@@ -100,6 +103,7 @@ public class ServerUdp_Q5 extends Thread {
     byte[] btlen = new byte[4];
     byte[] Cmd = new byte[1];
     int len = 0, overtime_read = 0;
+
     public ServerUdp_Q5() {
 
     }
@@ -517,7 +521,7 @@ public class ServerUdp_Q5 extends Thread {
                                 }
                                 udpSend(respData);
                                 Log.e("x3config", "through send success");
-                            }else {
+                            } else {
                                 Log.e("x3config", "through send fail");
                             }
 
@@ -1180,8 +1184,10 @@ public class ServerUdp_Q5 extends Thread {
                                 System.out.println("get version has not get respond,return");
                                 break;
                             }
+                            String last = "";
                             for (int c = 0; c < 2; c++) {
                                 String ver1 = string.substring(pos + 3 + c * 2, pos + 3 + 2 * (c + 1));
+                                last = string.substring(pos + 3, pos + 3 + 4);
                                 byte[] bytes = new byte[1];
                                 if (!isNumeric(ver1)) return;
                                 int device = Integer.parseInt(ver1);
@@ -1219,6 +1225,7 @@ public class ServerUdp_Q5 extends Thread {
 
                             try {
                                 respData = respondString.getBytes("ISO-8859-1");
+                                Log.e(TAG, "vFPGA: "+last );
                             } catch (Exception e) {
                                 // TODO: handle exception
                                 e.printStackTrace();
@@ -1467,6 +1474,11 @@ public class ServerUdp_Q5 extends Thread {
                             {
                                 byte[] updata = MyApplication.readFile(MyApplication.FPGApath, MyApplication.context);
                                 if (null == updata) return;
+                                //发送广播开始升级
+                                Intent intent = new Intent("com.listen.action.fpga_start_update");
+                                intent.putExtra("msg", "start");
+                                MyApplication.context.sendBroadcast(intent, null);
+
                                 byte[] temp = new byte[256];
                                 int count = (updata.length - 271) / 256;
                                 for (int i = -1; i < count; i++) {
@@ -1636,13 +1648,15 @@ public class ServerUdp_Q5 extends Thread {
                                         try {
                                             mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
                                             sleep(10);
-                                            udpSend("*#000001#*".getBytes("ISO-8859-1"));
+                                            //发送广播升级失败
+                                            Intent intent1 = new Intent("com.listen.action.fpga_update_status");
+                                            intent1.putExtra("fpga", -1);
+                                            MyApplication.context.sendBroadcast(intent1, null);
+//                                            udpSend("*#000001#*".getBytes("ISO-8859-1"));
                                         } catch (Exception e) {
                                             // TODO: handle exception
                                             e.printStackTrace();
                                         }
-
-
                                         break;
                                     }
 
@@ -1663,8 +1677,6 @@ public class ServerUdp_Q5 extends Thread {
                                         Log.e(TAG, "rBuffer 0038: " + new String(rBuffer, 0, 20));
                                         if (new String(rBuffer, 0, 50).contains("3B")) break;
                                     }
-
-
                                 }
                                 //发送完毕
 
@@ -1672,15 +1684,103 @@ public class ServerUdp_Q5 extends Thread {
                                     sleep(3000);
                                     mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
                                     sleep(3000);
-                                    udpSend("*#000000#*".getBytes("ISO-8859-1"));
+                                    //发送广播，升级成功
+
+                                    Intent intent0 = new Intent("com.listen.action.fpga_update_status");
+                                    intent0.putExtra("fpga", 0);
+                                    MyApplication.context.sendBroadcast(intent0, null);
+
+
+//                                    udpSend("*#000000#*".getBytes("ISO-8859-1"));
                                 } catch (Exception e) {
                                     // TODO: handle exception
                                     e.printStackTrace();
                                 }
                                 System.out.println("(发送完毕)......");
-
-
                             }
+                        }
+
+                        break;
+                        case GET_FPGA_VERSION: {
+                            String last = "";
+                            len = 0;
+                            respondString = "*#";
+                            btlen[0] = (byte) (len & 0x0ff);
+                            btlen[1] = (byte) ((len >> 8) & 0x0ff);
+                            btlen[2] = (byte) ((len >> 16) & 0x0ff);
+                            btlen[3] = (byte) ((len >> 24) & 0x0ff);
+
+                            strlength = "";
+                            try {
+                                strlength = new String(btlen, "ISO-8859-1");
+                            } catch (Exception e) {
+                                // TODO: handle exception
+                            }
+
+                            Cmd[0] = FPGA_CMD_GETVERSION;
+                            strCmd = new String(Cmd);
+                            respondString += strCmd;        //cmd
+                            respondString += strlength;    //length
+                            //no data
+                            respondString += "#*";
+
+
+                            //1: *********** 读出 *****************
+                            String resString = "*#RL 0002 0002#*";
+                            try {
+                                respData = resString.getBytes("ISO-8859-1");
+                            } catch (Exception e) {
+                                // TODO: handle exception
+                            }
+                            try {
+                                mOutputStream.write(respData);
+                                Thread.sleep(50);
+                            } catch (Exception e) {
+                                // TODO: handle exception
+                                e.printStackTrace();
+                            }
+                            try {
+                                if (mInputStream.available() > 0)
+                                    len = mInputStream.read(rBuffer);
+                            } catch (Exception e) {
+                                // TODO: handle exception
+                                e.printStackTrace();
+                            }
+
+                            String string = "";
+                            String fpver = "";
+                            try {
+                                string = new String(rBuffer, "ISO-8859-1");
+                                //String[] stringsplit=string.split("&", 1) ;
+                            } catch (Exception e) {
+                                // TODO: handle exception
+                            }
+                            int pos = string.indexOf("%*#");
+                            if (pos < 0) {
+                                System.out.println("get version has not get respond,return");
+                                break;
+                            }
+                            for (int c = 0; c < 2; c++) {
+                                String ver1 = string.substring(pos + 3 + c * 2, pos + 3 + 2 * (c + 1));
+                                last = string.substring(pos + 3, pos + 3 + 4);
+                                byte[] bytes = new byte[1];
+                                if (!isNumeric(ver1)) return;
+                                int device = Integer.parseInt(ver1);
+                                bytes = intToDecimOneByte(device);
+
+                                try {
+                                    ver1 = new String(bytes, "ISO-8859-1");
+                                    fpver += ver1;
+                                } catch (Exception e) {
+
+                                }
+                            }
+
+                            Log.e(TAG, "respFPAGV: " + last);
+//                            发送广播
+                            Intent intent0 = new Intent("com.listen.action.fpga_version");
+                            intent0.putExtra("fpgaversion", last);
+                            MyApplication.context.sendBroadcast(intent0, null);
                         }
 
                         break;

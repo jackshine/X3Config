@@ -57,7 +57,7 @@ public class ComService extends Service {
             new ServerUdp_X3M(handler_for_udpReceiveAndtcpSend).start();
         } else if (MyApplication.VERSION.equals("X3T")) {
             new ServerUdp_X3T(handler_for_udpReceiveAndtcpSend).start();
-        }else if (MyApplication.VERSION.equals("Q5")) {
+        }else if (MyApplication.VERSION.contains("Q5")) {
             new ServerUdp_Q5().start();
         }
     }
@@ -74,17 +74,17 @@ public class ComService extends Service {
                 StringBuffer sb = new StringBuffer();
                 // 共有属性
 
-                sb.append("bright,");// 亮度
-                sb.append("screen,");// 屏参
-                sb.append("reseves,");// 预留
-                sb.append("red,");// 伽马红
-                sb.append("green,");// 伽马绿
-                sb.append("blue,");// 伽马蓝
-                sb.append("string,");// 走线
-                sb.append("roworder,");// 行序
-                sb.append("nomal,");// 常规芯片寄存器
-                sb.append("bitscan,");// Bit表
-                sb.append("bitoewide,");// Bit表
+                sb.append("-,");// 亮度
+                sb.append("-,");// 屏参
+                sb.append("-,");// 预留
+                sb.append("-,");// 伽马红
+                sb.append("-,");// 伽马绿
+                sb.append("-,");// 伽马蓝
+                sb.append("-,");// 走线
+                sb.append("-,");// 行序
+                sb.append("-,");// 常规芯片寄存器
+                sb.append("-,");// Bit表
+                sb.append("-,");// Bit表
                 sb.append("-,");// 级联端口
                 // 高刷芯片属性
                 sb.append("-,");// 高刷芯片刷新算法数据表

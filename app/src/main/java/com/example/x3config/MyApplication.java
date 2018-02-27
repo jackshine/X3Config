@@ -27,9 +27,9 @@ public class MyApplication extends Application {
         context = this;
         //获取版本
         VERSION = getVersion();
-        Log.e("x3config", VERSION );
+        Log.e("x3config", VERSION +"");
 //        CrashHandler.getInstance().init(this);
-//        LogCatHelper.getInstance(this, "/sdcard/listenled").start();
+        LogCatHelper.getInstance(this, "/sdcard/log_config").start();
     }
     public String getVersion() {
         String configpath = "/sdcard/listen/config/paramConfig.ini";

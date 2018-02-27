@@ -49,8 +49,8 @@ public class ComService extends Service {
     @Override
     public void onCreate() {//在onCreate()方法中打印了一个log便于测试
         super.onCreate();
-        Log.d("BootBroadcastReceiver",MyApplication.VERSION+ "  Service 已经启动成功");
-        if (MyApplication.VERSION.equals("Q5"))
+        Log.d("BootBroadcastReceiver",MyApplication.VERSION+ "  --Service 已经启动成功");
+        if (MyApplication.VERSION.contains("Q5"))
         new ServerUdp_Q5().start();
     }
 
