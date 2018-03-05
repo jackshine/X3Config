@@ -1972,469 +1972,242 @@ public class ServerUdp extends Thread {
                             conn = 1;
                             Log.i("x3config", "收到升级指令");
 
-                            Thread updataThread = new Thread()
-                            {
+                            Thread updataThread = new Thread() {
                                 @Override
                                 public void run() {
-                                    if (conn!=0)
-                                    {
+                                    if (conn != 0) {
                                         byte[] updata = MyApplication.readFile(MyApplication.FPGApath, MyApplication.context);
-                                        if (null == updata) {
+                                        if (null == updata || updata.length == 0) {
                                             Log.i("x3config", "未找到升级文件");
                                             conn = 0;
                                             //发送广播升级失败
                                             Intent intent1 = new Intent("com.listen.action.fpga_update_status");
                                             intent1.putExtra("fpga", -1);
                                             MyApplication.context.sendBroadcast(intent1, null);
+                                            this.interrupt();
                                         }
-                                        if (conn == 0) {
+                                        if (conn != 0) {
                                             //发送广播开始升级
                                             Intent intent = new Intent("com.listen.action.fpga_start_update");
                                             intent.putExtra("msg", "start");
                                             MyApplication.context.sendBroadcast(intent, null);
-                                            this.interrupt();
-                                        }
-                                        byte[] temp = new byte[256];
-                                        int count = (updata.length - 271) / 256;
-                                        for (int i = -1; i < count; i++) {
-                                            rBuffer = new byte[1024];
-                                            byte[] order = MyApplication.hexStringToBytes(Int2Hex4string(i));
-                                            if (i == -1) {
-                                                try {
-                                                    datalen = 27;
-                                                    data = "*#M0000*#WL C800 000A 0bf4004700#*#*".getBytes("ISO-8859-1");//升级允许
-                                                } catch (UnsupportedEncodingException e) {
-                                                    e.printStackTrace();
-                                                }
-                                            } else {
-                                                datalen = 537;
-                                                System.arraycopy(updata, 271 + 256 * i, temp, 0, 256);
-                                                StringBuffer bf = new StringBuffer("*#M0000*#WL C800 0208 2DD2");
-                                                bf.append(MyApplication.bytesToHexString(temp));
-                                                bf.append(MyApplication.bytesToHexString(order));
-                                                bf.append("#*#*");
-                                                try {
-                                                    data = bf.toString().getBytes("ISO-8859-1");
-                                                } catch (UnsupportedEncodingException e) {
-                                                    e.printStackTrace();
-                                                }
-                                            }
-                                            len = 0;
-                                            //发送操作
-                                            if (datalen == 27) {
-                                                if ((data[21 + 7] == '0') && (data[22 + 7] == '0') && (data[23 + 7] == '4') && (data[24 + 7] == '7')) {
-                                                    //clear input buff
-                                                    try {
-                                                        if (mInputStream.available() > 0)
-                                                            len = mInputStream.read(rBuffer);
-                                                        Thread.sleep(10);
-                                                        mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
-                                                        Thread.sleep(10);
-                                                    } catch (Exception e) {
-                                                        // TODO: handle exception
-                                                        e.printStackTrace();
-                                                    }
 
-                                                } else if ((data[21 + 7] == '4') && (data[22 + 7] == '7') && (data[23 + 7] == '0') && (data[24 + 7] == '0')) {
-                                                    //clear input buff
+                                            byte[] temp = new byte[256];
+                                            int count = (updata.length - 271) / 256;
+                                            for (int i = -1; i < count; i++) {
+                                                rBuffer = new byte[1024];
+                                                byte[] order = MyApplication.hexStringToBytes(Int2Hex4string(i));
+                                                if (i == -1) {
+                                                    try {
+                                                        datalen = 27;
+                                                        data = "*#M0000*#WL C800 000A 0bf4004700#*#*".getBytes("ISO-8859-1");//升级允许
+                                                    } catch (UnsupportedEncodingException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                } else {
+                                                    datalen = 537;
+                                                    System.arraycopy(updata, 271 + 256 * i, temp, 0, 256);
+                                                    StringBuffer bf = new StringBuffer("*#M0000*#WL C800 0208 2DD2");
+                                                    bf.append(MyApplication.bytesToHexString(temp));
+                                                    bf.append(MyApplication.bytesToHexString(order));
+                                                    bf.append("#*#*");
+                                                    try {
+                                                        data = bf.toString().getBytes("ISO-8859-1");
+                                                    } catch (UnsupportedEncodingException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                }
+                                                len = 0;
+                                                //发送操作
+                                                if (datalen == 27) {
+                                                    if ((data[21 + 7] == '0') && (data[22 + 7] == '0') && (data[23 + 7] == '4') && (data[24 + 7] == '7')) {
+                                                        //clear input buff
+                                                        try {
+                                                            if (mInputStream.available() > 0)
+                                                                len = mInputStream.read(rBuffer);
+                                                            Thread.sleep(10);
+                                                            mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
+                                                            Thread.sleep(10);
+                                                        } catch (Exception e) {
+                                                            // TODO: handle exception
+                                                            e.printStackTrace();
+                                                        }
+
+                                                    } else if ((data[21 + 7] == '4') && (data[22 + 7] == '7') && (data[23 + 7] == '0') && (data[24 + 7] == '0')) {
+                                                        //clear input buff
+                                                        try {
+                                                            if (mInputStream.available() > 0)
+                                                                len = mInputStream.read(rBuffer);
+                                                            Thread.sleep(10);
+                                                            mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
+                                                            Thread.sleep(10);
+                                                        } catch (Exception e) {
+                                                            // TODO: handle exception
+                                                            e.printStackTrace();
+                                                        }
+                                                    } else if ((data[21 + 7] == '0') && (data[22 + 7] == '0') && (data[23 + 7] == '0') && (data[24 + 7] == '0')) {
+                                                    }
+                                                    // clear buff
                                                     try {
                                                         if (mInputStream.available() > 0)
                                                             len = mInputStream.read(rBuffer);
-                                                        Thread.sleep(10);
-                                                        mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
-                                                        Thread.sleep(10);
                                                     } catch (Exception e) {
                                                         // TODO: handle exception
-                                                        e.printStackTrace();
                                                     }
-                                                } else if ((data[21 + 7] == '0') && (data[22 + 7] == '0') && (data[23 + 7] == '0') && (data[24 + 7] == '0')) {
                                                 }
-                                                // clear buff
+                                                int packSerials = 0;
+                                                if (datalen >= 500) {
+                                                    byte xor = 0;
+                                                    byte a, b, c, d = 0;
+                                                    a = data[531 + 7];
+                                                    b = data[532 + 7];
+                                                    c = data[533 + 7];
+                                                    d = data[534 + 7];
+                                                    packSerials = hexCharToInt(b) * 256 + hexCharToInt(c) * 16 + hexCharToInt(d);
+                                                    Log.i("get current pack=", Integer.toString(packSerials));
+                                                    g_packID = packSerials;
+                                                    data[537 + 7] = data[535 + 7];
+                                                    data[538 + 7] = data[536 + 7];
+                                                    xor = CheckXOR(data, 7);
+                                                    int i_xr = Math.abs(xor);
+                                                    if (xor < 0)
+                                                        i_xr = 256 - Math.abs(xor);
+                                                    byte xorhi = 0, xorlo = 0;
+                                                    xorhi = (byte) (i_xr / 16);
+                                                    xorlo = (byte) (i_xr % 16);
+                                                    if ((xorhi >= 0) && (xorhi <= 9))
+                                                        data[535 + 7] = (byte) (xorhi + '0');
+                                                    else if ((xorhi >= 10) && (xorhi <= 15))
+                                                        data[535 + 7] = (byte) (xorhi - 10 + 'A');
+                                                    else
+                                                        data[535 + 7] = '0';
+                                                    if ((xorlo >= 0) && (xorlo <= 9))
+                                                        data[536 + 7] = (byte) (xorlo + '0');
+                                                    else if ((xorlo >= 10) && (xorlo <= 15))
+                                                        data[536 + 7] = (byte) (xorlo - 10 + 'A');
+                                                    else
+                                                        data[536 + 7] = '0';
+                                                    data[13 + 7] = 'A';
+                                                    datalen = datalen + 2;
+                                                    g_xor = xor;
+                                                }
+
                                                 try {
-                                                    if (mInputStream.available() > 0)
-                                                        len = mInputStream.read(rBuffer);
+                                                    mOutputStream.write(data, 7, datalen);
+                                                    if (i == -1) sleep(10000);
+                                                    sleep(50);
                                                 } catch (Exception e) {
                                                     // TODO: handle exception
+                                                    e.printStackTrace();
+                                                }
+
+                                                overtime_read = 0;
+                                                while (true) {
+                                                    overtime_read++;
+                                                    try {
+                                                        if (mInputStream.available() > 0)
+                                                            len = mInputStream.read(rBuffer);
+                                                        sleep(5);
+                                                    } catch (Exception e) {
+                                                        // TODO: handle exception
+                                                    }
+                                                    if ((rBuffer[0] == '%') && (rBuffer[1] == '#') && (rBuffer[2] == 'W') && (rBuffer[3] == 'L') && (rBuffer[4] == '#') && (rBuffer[5] == '%'))
+                                                        break;
+                                                    if ((rBuffer[0] == '%') && (rBuffer[1] == '#') && (rBuffer[2] == 'R') && (rBuffer[3] == 'L') && (rBuffer[4] == '#') && (rBuffer[5] == '%'))
+                                                        break;
+                                                    if (overtime_read >= 150) {
+                                                        break;
+                                                    }
+                                                }
+                                                if (overtime_read >= 150) {
+                                                    try {
+                                                        mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
+                                                        sleep(10);
+                                                        conn = 0;
+                                                        Log.i("x3config", "升级异常中断,FPGA回复升级回复超时,包序号：" + Integer.toString(packSerials));
+                                                        //发送广播升级失败
+                                                        Intent intent1 = new Intent("com.listen.action.fpga_update_status");
+                                                        intent1.putExtra("fpga", -1);
+                                                        MyApplication.context.sendBroadcast(intent1, null);
+                                                        this.interrupt();
+                                                    } catch (Exception e) {
+                                                        // TODO: handle exception
+                                                        e.printStackTrace();
+                                                    }
+                                                    break;
+                                                }
+                                                for (int j = 0; j < 30; j++) {
+                                                    try {
+                                                        mOutputStream.write("*#RL 0038 0004#*".getBytes("ISO-8859-1"), 0, 16);
+                                                    } catch (Exception e) {
+                                                        // TODO: handle exception
+                                                        e.printStackTrace();
+                                                    }
+                                                    try {
+                                                        sleep(4);
+                                                        if (mInputStream.available() > 0)
+                                                            len = mInputStream.read(rBuffer);
+                                                    } catch (Exception e) {
+                                                        // TODO: handle exception
+                                                    }
+//                                        Log.e(TAG, "rBuffer 0038: " + new String(rBuffer, 0, 20));
+                                                    if (new String(rBuffer, 0, 50).contains("3B"))
+                                                        break;
                                                 }
                                             }
-                                            int packSerials = 0;
-                                            if (datalen >= 500) {
-                                                byte xor = 0;
-                                                byte a, b, c, d = 0;
-                                                a = data[531 + 7];
-                                                b = data[532 + 7];
-                                                c = data[533 + 7];
-                                                d = data[534 + 7];
-                                                packSerials = hexCharToInt(b) * 256 + hexCharToInt(c) * 16 + hexCharToInt(d);
-                                                Log.i("get current pack=", Integer.toString(packSerials));
-                                                g_packID = packSerials;
-                                                data[537 + 7] = data[535 + 7];
-                                                data[538 + 7] = data[536 + 7];
-                                                xor = CheckXOR(data, 7);
-                                                int i_xr = Math.abs(xor);
-                                                if (xor < 0)
-                                                    i_xr = 256 - Math.abs(xor);
-                                                byte xorhi = 0, xorlo = 0;
-                                                xorhi = (byte) (i_xr / 16);
-                                                xorlo = (byte) (i_xr % 16);
-                                                if ((xorhi >= 0) && (xorhi <= 9))
-                                                    data[535 + 7] = (byte) (xorhi + '0');
-                                                else if ((xorhi >= 10) && (xorhi <= 15))
-                                                    data[535 + 7] = (byte) (xorhi - 10 + 'A');
-                                                else
-                                                    data[535 + 7] = '0';
-                                                if ((xorlo >= 0) && (xorlo <= 9))
-                                                    data[536 + 7] = (byte) (xorlo + '0');
-                                                else if ((xorlo >= 10) && (xorlo <= 15))
-                                                    data[536 + 7] = (byte) (xorlo - 10 + 'A');
-                                                else
-                                                    data[536 + 7] = '0';
-                                                data[13 + 7] = 'A';
-                                                datalen = datalen + 2;
-                                                g_xor = xor;
-                                            }
+                                            //发送完毕
 
                                             try {
-                                                mOutputStream.write(data, 7, datalen);
-                                                if (i == -1) sleep(10000);
-                                                sleep(50);
+                                                boolean issuccess = false;
+                                                for (int j = 0; j < 30; j++) {
+                                                    try {
+                                                        mOutputStream.write("*#RL 0038 0004#*".getBytes("ISO-8859-1"), 0, 16);
+                                                    } catch (Exception e) {
+                                                        // TODO: handle exception
+                                                        e.printStackTrace();
+                                                    }
+                                                    try {
+                                                        sleep(1000);
+                                                        if (mInputStream.available() > 0)
+                                                            len = mInputStream.read(rBuffer);
+                                                    } catch (Exception e) {
+                                                        // TODO: handle exception
+                                                    }
+                                                    if (new String(rBuffer, 0, 50).contains("65")) {
+                                                        issuccess = true;
+                                                        break;
+                                                    }
+                                                }
+                                                Log.e("x3config", "升级issuccess: " + issuccess);
+                                                if (issuccess) {
+                                                    mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
+                                                    //发送广播，升级成功
+                                                    conn = 0;
+                                                    Intent intent0 = new Intent("com.listen.action.fpga_update_status");
+                                                    intent0.putExtra("fpga", 0);
+                                                    MyApplication.context.sendBroadcast(intent0, null);
+                                                } else {
+                                                    mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
+                                                    //发送广播，升级完成，不一定成功
+                                                    conn = 0;
+                                                    Intent intent1 = new Intent("com.listen.action.fpga_update_status");
+                                                    intent1.putExtra("fpga", -1);
+                                                    MyApplication.context.sendBroadcast(intent1, null);
+                                                }
+
                                             } catch (Exception e) {
                                                 // TODO: handle exception
                                                 e.printStackTrace();
                                             }
-
-                                            overtime_read = 0;
-                                            while (true) {
-                                                overtime_read++;
-                                                try {
-                                                    if (mInputStream.available() > 0)
-                                                        len = mInputStream.read(rBuffer);
-                                                    sleep(5);
-                                                } catch (Exception e) {
-                                                    // TODO: handle exception
-                                                }
-                                                if ((rBuffer[0] == '%') && (rBuffer[1] == '#') && (rBuffer[2] == 'W') && (rBuffer[3] == 'L') && (rBuffer[4] == '#') && (rBuffer[5] == '%'))
-                                                    break;
-                                                if ((rBuffer[0] == '%') && (rBuffer[1] == '#') && (rBuffer[2] == 'R') && (rBuffer[3] == 'L') && (rBuffer[4] == '#') && (rBuffer[5] == '%'))
-                                                    break;
-                                                if (overtime_read >= 150) {
-                                                    break;
-                                                }
-                                            }
-                                            if (overtime_read >= 150) {
-                                                try {
-                                                    mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
-                                                    sleep(10);
-                                                    conn = 0;
-                                                    Log.i("x3config", "升级异常中断,FPGA回复升级回复超时,包序号：" + Integer.toString(packSerials));
-                                                    //发送广播升级失败
-                                                    Intent intent1 = new Intent("com.listen.action.fpga_update_status");
-                                                    intent1.putExtra("fpga", -1);
-                                                    MyApplication.context.sendBroadcast(intent1, null);
-                                                } catch (Exception e) {
-                                                    // TODO: handle exception
-                                                    e.printStackTrace();
-                                                }
-                                                break;
-                                            }
-                                            for (int j = 0; j < 30; j++) {
-                                                try {
-                                                    mOutputStream.write("*#RL 0038 0004#*".getBytes("ISO-8859-1"), 0, 16);
-                                                } catch (Exception e) {
-                                                    // TODO: handle exception
-                                                    e.printStackTrace();
-                                                }
-                                                try {
-                                                    sleep(4);
-                                                    if (mInputStream.available() > 0)
-                                                        len = mInputStream.read(rBuffer);
-                                                } catch (Exception e) {
-                                                    // TODO: handle exception
-                                                }
-//                                        Log.e(TAG, "rBuffer 0038: " + new String(rBuffer, 0, 20));
-                                                if (new String(rBuffer, 0, 50).contains("3B"))
-                                                    break;
-                                            }
+                                            conn = 0;
+                                            System.out.println("(发送完毕)......");
+                                            this.interrupt();
                                         }
-                                        //发送完毕
-
-                                        try {
-                                            boolean issuccess = false;
-                                            for (int j = 0; j < 30; j++) {
-                                                try {
-                                                    mOutputStream.write("*#RL 0038 0004#*".getBytes("ISO-8859-1"), 0, 16);
-                                                } catch (Exception e) {
-                                                    // TODO: handle exception
-                                                    e.printStackTrace();
-                                                }
-                                                try {
-                                                    sleep(1000);
-                                                    if (mInputStream.available() > 0)
-                                                        len = mInputStream.read(rBuffer);
-                                                } catch (Exception e) {
-                                                    // TODO: handle exception
-                                                }
-                                                if (new String(rBuffer, 0, 50).contains("65")) {
-                                                    issuccess = true;
-                                                    break;
-                                                }
-                                            }
-                                            Log.e("x3config", "升级issuccess: " + issuccess);
-                                            if (issuccess) {
-                                                mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
-                                                //发送广播，升级成功
-                                                conn = 0;
-                                                Intent intent0 = new Intent("com.listen.action.fpga_update_status");
-                                                intent0.putExtra("fpga", 0);
-                                                MyApplication.context.sendBroadcast(intent0, null);
-                                            } else {
-                                                mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
-                                                //发送广播，升级完成，不一定成功
-                                                conn = 0;
-                                                Intent intent1 = new Intent("com.listen.action.fpga_update_status");
-                                                intent1.putExtra("fpga", -1);
-                                                MyApplication.context.sendBroadcast(intent1, null);
-                                            }
-
-                                        } catch (Exception e) {
-                                            // TODO: handle exception
-                                            e.printStackTrace();
-                                        }
-                                        conn = 0;
-                                        System.out.println("(发送完毕)......");
-                                        this.interrupt();
                                     }
                                 }
                             };
                             updataThread.start();
                         }
-//                        {
-//                            byte[] updata = MyApplication.readFile(MyApplication.FPGApath, MyApplication.context);
-//                            if (null == updata) {
-//                                Log.i("x3config", "未找到升级文件");
-//                                conn = 0;
-//                                //发送广播升级失败
-//                                Intent intent1 = new Intent("com.listen.action.fpga_update_status");
-//                                intent1.putExtra("fpga", -1);
-//                                MyApplication.context.sendBroadcast(intent1, null);
-//                            }
-//                            if (conn == 0) {
-//                                //发送广播开始升级
-//                                Intent intent = new Intent("com.listen.action.fpga_start_update");
-//                                intent.putExtra("msg", "start");
-//                                MyApplication.context.sendBroadcast(intent, null);
-//                                break;
-//                            }
-//                            byte[] temp = new byte[256];
-//                            int count = (updata.length - 271) / 256;
-//                            for (int i = -1; i < count; i++) {
-//                                rBuffer = new byte[1024];
-//                                byte[] order = MyApplication.hexStringToBytes(Int2Hex4string(i));
-//                                if (i == -1) {
-//                                    try {
-//                                        datalen = 27;
-//                                        data = "*#M0000*#WL C800 000A 0bf4004700#*#*".getBytes("ISO-8859-1");//升级允许
-//                                    } catch (UnsupportedEncodingException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                } else {
-//                                    datalen = 537;
-//                                    System.arraycopy(updata, 271 + 256 * i, temp, 0, 256);
-//                                    StringBuffer bf = new StringBuffer("*#M0000*#WL C800 0208 2DD2");
-//                                    bf.append(MyApplication.bytesToHexString(temp));
-//                                    bf.append(MyApplication.bytesToHexString(order));
-//                                    bf.append("#*#*");
-//                                    try {
-//                                        data = bf.toString().getBytes("ISO-8859-1");
-//                                    } catch (UnsupportedEncodingException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                                len = 0;
-//                                //发送操作
-//                                if (datalen == 27) {
-//                                    if ((data[21 + 7] == '0') && (data[22 + 7] == '0') && (data[23 + 7] == '4') && (data[24 + 7] == '7')) {
-//                                        //clear input buff
-//                                        try {
-//                                            if (mInputStream.available() > 0)
-//                                                len = mInputStream.read(rBuffer);
-//                                            Thread.sleep(10);
-//                                            mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
-//                                            Thread.sleep(10);
-//                                        } catch (Exception e) {
-//                                            // TODO: handle exception
-//                                            e.printStackTrace();
-//                                        }
-//
-//                                    } else if ((data[21 + 7] == '4') && (data[22 + 7] == '7') && (data[23 + 7] == '0') && (data[24 + 7] == '0')) {
-//                                        //clear input buff
-//                                        try {
-//                                            if (mInputStream.available() > 0)
-//                                                len = mInputStream.read(rBuffer);
-//                                            Thread.sleep(10);
-//                                            mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
-//                                            Thread.sleep(10);
-//                                        } catch (Exception e) {
-//                                            // TODO: handle exception
-//                                            e.printStackTrace();
-//                                        }
-//                                    } else if ((data[21 + 7] == '0') && (data[22 + 7] == '0') && (data[23 + 7] == '0') && (data[24 + 7] == '0')) {
-//                                    }
-//                                    // clear buff
-//                                    try {
-//                                        if (mInputStream.available() > 0)
-//                                            len = mInputStream.read(rBuffer);
-//                                    } catch (Exception e) {
-//                                        // TODO: handle exception
-//                                    }
-//                                }
-//                                int packSerials = 0;
-//                                if (datalen >= 500) {
-//                                    byte xor = 0;
-//                                    byte a, b, c, d = 0;
-//                                    a = data[531 + 7];
-//                                    b = data[532 + 7];
-//                                    c = data[533 + 7];
-//                                    d = data[534 + 7];
-//                                    packSerials = hexCharToInt(b) * 256 + hexCharToInt(c) * 16 + hexCharToInt(d);
-//                                    Log.i("get current pack=", Integer.toString(packSerials));
-//                                    g_packID = packSerials;
-//                                    data[537 + 7] = data[535 + 7];
-//                                    data[538 + 7] = data[536 + 7];
-//                                    xor = CheckXOR(data, 7);
-//                                    int i_xr = Math.abs(xor);
-//                                    if (xor < 0)
-//                                        i_xr = 256 - Math.abs(xor);
-//                                    byte xorhi = 0, xorlo = 0;
-//                                    xorhi = (byte) (i_xr / 16);
-//                                    xorlo = (byte) (i_xr % 16);
-//                                    if ((xorhi >= 0) && (xorhi <= 9))
-//                                        data[535 + 7] = (byte) (xorhi + '0');
-//                                    else if ((xorhi >= 10) && (xorhi <= 15))
-//                                        data[535 + 7] = (byte) (xorhi - 10 + 'A');
-//                                    else
-//                                        data[535 + 7] = '0';
-//                                    if ((xorlo >= 0) && (xorlo <= 9))
-//                                        data[536 + 7] = (byte) (xorlo + '0');
-//                                    else if ((xorlo >= 10) && (xorlo <= 15))
-//                                        data[536 + 7] = (byte) (xorlo - 10 + 'A');
-//                                    else
-//                                        data[536 + 7] = '0';
-//                                    data[13 + 7] = 'A';
-//                                    datalen = datalen + 2;
-//                                    g_xor = xor;
-//                                }
-//
-//                                try {
-//                                    mOutputStream.write(data, 7, datalen);
-//                                    if (i == -1) sleep(10000);
-//                                    sleep(50);
-//                                } catch (Exception e) {
-//                                    // TODO: handle exception
-//                                    e.printStackTrace();
-//                                }
-//
-//                                overtime_read = 0;
-//                                while (true) {
-//                                    overtime_read++;
-//                                    try {
-//                                        if (mInputStream.available() > 0)
-//                                            len = mInputStream.read(rBuffer);
-//                                        sleep(5);
-//                                    } catch (Exception e) {
-//                                        // TODO: handle exception
-//                                    }
-//                                    if ((rBuffer[0] == '%') && (rBuffer[1] == '#') && (rBuffer[2] == 'W') && (rBuffer[3] == 'L') && (rBuffer[4] == '#') && (rBuffer[5] == '%'))
-//                                        break;
-//                                    if ((rBuffer[0] == '%') && (rBuffer[1] == '#') && (rBuffer[2] == 'R') && (rBuffer[3] == 'L') && (rBuffer[4] == '#') && (rBuffer[5] == '%'))
-//                                        break;
-//                                    if (overtime_read >= 150) {
-//                                        break;
-//                                    }
-//                                }
-//                                if (overtime_read >= 150) {
-//                                    try {
-//                                        mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
-//                                        sleep(10);
-//                                        conn = 0;
-//                                        Log.i("x3config", "升级异常中断,FPGA回复升级回复超时,包序号：" + Integer.toString(packSerials));
-//                                        //发送广播升级失败
-//                                        Intent intent1 = new Intent("com.listen.action.fpga_update_status");
-//                                        intent1.putExtra("fpga", -1);
-//                                        MyApplication.context.sendBroadcast(intent1, null);
-//                                    } catch (Exception e) {
-//                                        // TODO: handle exception
-//                                        e.printStackTrace();
-//                                    }
-//                                    break;
-//                                }
-//                                for (int j = 0; j < 30; j++) {
-//                                    try {
-//                                        mOutputStream.write("*#RL 0038 0004#*".getBytes("ISO-8859-1"), 0, 16);
-//                                    } catch (Exception e) {
-//                                        // TODO: handle exception
-//                                        e.printStackTrace();
-//                                    }
-//                                    try {
-//                                        sleep(4);
-//                                        if (mInputStream.available() > 0)
-//                                            len = mInputStream.read(rBuffer);
-//                                    } catch (Exception e) {
-//                                        // TODO: handle exception
-//                                    }
-////                                        Log.e(TAG, "rBuffer 0038: " + new String(rBuffer, 0, 20));
-//                                    if (new String(rBuffer, 0, 50).contains("3B"))
-//                                        break;
-//                                }
-//                            }
-//                            //发送完毕
-//
-//                            try {
-//                                boolean issuccess = false;
-//                                for (int j = 0; j < 30; j++) {
-//                                    try {
-//                                        mOutputStream.write("*#RL 0038 0004#*".getBytes("ISO-8859-1"), 0, 16);
-//                                    } catch (Exception e) {
-//                                        // TODO: handle exception
-//                                        e.printStackTrace();
-//                                    }
-//                                    try {
-//                                        sleep(1000);
-//                                        if (mInputStream.available() > 0)
-//                                            len = mInputStream.read(rBuffer);
-//                                    } catch (Exception e) {
-//                                        // TODO: handle exception
-//                                    }
-//                                    if (new String(rBuffer, 0, 50).contains("65")) {
-//                                        issuccess = true;
-//                                        break;
-//                                    }
-//                                }
-//                                Log.e("x3config", "升级issuccess: " + issuccess);
-//                                if (issuccess) {
-//                                    mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
-//                                    //发送广播，升级成功
-//                                    conn = 0;
-//                                    Intent intent0 = new Intent("com.listen.action.fpga_update_status");
-//                                    intent0.putExtra("fpga", 0);
-//                                    MyApplication.context.sendBroadcast(intent0, null);
-//                                } else {
-//                                    mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
-//                                    //发送广播，升级完成，不一定成功
-//                                    conn = 0;
-//                                    Intent intent1 = new Intent("com.listen.action.fpga_update_status");
-//                                    intent1.putExtra("fpga", -1);
-//                                    MyApplication.context.sendBroadcast(intent1, null);
-//                                }
-//
-//                            } catch (Exception e) {
-//                                // TODO: handle exception
-//                                e.printStackTrace();
-//                            }
-//                            conn = 0;
-//                            System.out.println("(发送完毕)......");
-//                        }
-//                    }
                         break;
                         case GET_FPGA_VERSION: {
                             String last = "";

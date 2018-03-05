@@ -77,6 +77,7 @@ public class MyApplication extends Application {
             stream.close();
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
         return stream.toByteArray();
     }
