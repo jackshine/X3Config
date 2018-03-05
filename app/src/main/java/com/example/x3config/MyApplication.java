@@ -29,7 +29,7 @@ public class MyApplication extends Application {
         VERSION = getVersion();
         Log.e("x3config", VERSION +"");
 //        CrashHandler.getInstance().init(this);
-        LogCatHelper.getInstance(this, "/sdcard/log_config").start();
+//        LogCatHelper.getInstance(this, "/sdcard/log_config").start();
     }
     public String getVersion() {
         String configpath = "/sdcard/listen/config/paramConfig.ini";

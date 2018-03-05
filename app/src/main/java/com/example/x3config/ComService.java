@@ -19,49 +19,21 @@ import java.io.OutputStream;
 import java.util.Properties;
 
 public class ComService extends Service {
-    Handler handler_for_udpReceiveAndtcpSend = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-
-			/* 0x111: 在TextView "send_label" 上, append 发送tcp连接的信息 */
-            if (msg.what == 0x111) {
-
-
-            }
-            /* 0x222: 在TextView上 "receive_label" 加上收到tcp连接的信息, udp多播的信息 */
-            else if (msg.what == 0x222) {
-
-            }
-        }
-    };
-
     @Override
     public IBinder onBind(Intent arg0) {//这是Service必须要实现的方法，目前这里面什么都没有做
-
         return null;
     }
 
     @Override
     public void onCreate() {//在onCreate()方法中打印了一个log便于测试
         super.onCreate();
-        Log.d("BootBroadcastReceiver",MyApplication.VERSION+ "  Service 已经启动成功");
-
+        Log.i("x3config",MyApplication.VERSION+ "  Service 已经启动成功");
         // 发送本地文件到FPGA
-        if (MyApplication.VERSION.equals("X3")) {
-            // 判断本地是否有固化的配置文件
+        if (MyApplication.VERSION.equals("X3")) {// 判断本地是否有固化的配置文件
             solidify();
-            new ServerUdp_X3(handler_for_udpReceiveAndtcpSend).start();
-
-        } else if (MyApplication.VERSION.equals("X3M")) {
-            new ServerUdp_X3M(handler_for_udpReceiveAndtcpSend).start();
-        } else if (MyApplication.VERSION.equals("X3T")) {
-            new ServerUdp_X3T(handler_for_udpReceiveAndtcpSend).start();
-        }else if (MyApplication.VERSION.contains("Q5")) {
-            new ServerUdp_Q5().start();
         }
+        new ServerUdp().start();
     }
-
     // 初始化SPI为默认数据或者上次保存的数据，并且将该数据复制到FLASH中
     public void solidify() {
         System.out.println("solidify--------");
@@ -107,6 +79,4 @@ public class ComService extends Service {
         }
         FileUtils.copyFile(file, filecrash);// 复制SPI文件到FLASH
     }
-
-
 }

@@ -32,13 +32,13 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 //        context=this;
 //		setContentView(R.layout.activity_main);
-        if (MyApplication.VERSION.contains("Q5")) {
-            Intent service = new Intent(this, com.listentech.kinward.x3config.ComService.class);// 要启动的Service
-            this.startService(service);
-        } else {
-            Intent service = new Intent(this, com.example.x3config.ComService.class);// 要启动的Service
-            this.startService(service);
-        }
-        Log.d("BootBroadcastReceiver", "Activity 已经启动成功");
+//        if (MyApplication.VERSION.contains("Q5")) {
+//            Intent service = new Intent(this, com.listentech.kinward.x3config.ComService.class);// 要启动的Service
+//            this.startService(service);
+//        } else {
+//            Intent service = new Intent(this, com.example.x3config.ComService.class);// 要启动的Service
+//            this.startService(service);
+//        }
+//        Log.i("x3config", "Activity 已经启动成功");
     }
 }

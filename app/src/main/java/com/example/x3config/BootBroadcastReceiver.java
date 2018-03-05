@@ -23,11 +23,11 @@ public class BootBroadcastReceiver extends BroadcastReceiver {
 
             if (MyApplication.VERSION.contains("Q5")) {
                 Intent service = new Intent(context, com.listentech.kinward.x3config.ComService.class);// 要启动的Service
-                Log.d("BootBroadcastReceiver", "Q5开机自启动一个Service");
+                Log.i("x3config", "Q5开机自启动一个Service");
                 context.startService(service);
             } else {
                 Intent service = new Intent(context, com.example.x3config.ComService.class);// 要启动的Service
-                Log.d("BootBroadcastReceiver", "开机自启动一个Service");
+                Log.i("x3config", "开机自启动一个Service");
                 context.startService(service);
             }
 
