@@ -82,6 +82,10 @@ public class ServerUdp extends Thread {
     private final byte FPGA_CMD_UPDATE_FPGA = 77;  //接收卡/发送卡程序升级
     private final byte FPGA_CMD_GET_FPGA_STATE = 80;  //读取升级状态
 
+    private final byte GET_FPGA_STATE = 81;  //
+    private final byte UPDATE_FPGA = 78;  //接收卡/发送卡程序升级
+    private final byte GET_FPGA_VERSION = 79;  //获取FPGA版本
+
     private final byte ST_CMD_SCREENPARA = 204 - 256;
     private final byte ST_CMD_SETAPPPARA = 201 - 256;
     private final byte ST_CMD_GETAPPPARA = 203 - 256;
@@ -95,8 +99,8 @@ public class ServerUdp extends Thread {
     int g_LastBright = 255;
     //新增手机获取信息
     private int conn = 0;
-    private final byte UPDATE_FPGA = 78;  //接收卡/发送卡程序升级
-    private final byte GET_FPGA_VERSION = 79;  //获取FPGA版本
+
+
     MulticastSocket ms = null;
     DatagramPacket dp;
 
@@ -663,7 +667,17 @@ public class ServerUdp extends Thread {
             } catch (Exception e) {
 
             }
-            if (conn != 0) Log.i("x3config", "FPGA正在升级中");
+            if (conn != 0) {
+                if (data.length > 3 && data[2] == GET_FPGA_STATE) {
+                    Log.e("x3config", "fpgastate: updating");
+                    //发送广播正在升级中
+                    Intent intent0 = new Intent("com.listen.action.fpga_state");
+                    intent0.putExtra("fpgastate", 1);
+                    MyApplication.context.sendBroadcast(intent0, null);
+                    data=new byte[8192];
+                }
+
+            }
             if (dp.getAddress() != null && conn == 0) {
                 final String quest_ip = dp.getAddress().toString();
                 String host_ip = getLocalHostIp();
@@ -831,35 +845,33 @@ public class ServerUdp extends Thread {
                             }
                             break;
                         case ST_CMD_SETBRIGHT: {
-                            if (Version.equals("X3") || Version.contains("Q5")) {
-                                try {
-                                    mOutputStream.write(data, 7, datalen);
-                                    Thread.sleep(100);
-                                } catch (IOException e) {
-                                    // TODO: handle exception
-                                    e.printStackTrace();
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                String resString = "*#00000#*";
-                                try {
-                                    respData = resString.getBytes("ISO-8859-1");
-                                } catch (Exception e) {
-                                    // TODO: handle exception
-                                }
-                                udpSend(respData);
-                                fl = new File("sdcard/appbright.txt");
-                                try {
-                                    fd_OutputStream = new FileOutputStream(fl);
-                                    fd_OutputStream.write(data, 7, datalen);
-                                    fd_OutputStream.close();
-                                } catch (Exception e) {
-                                    // TODO: handle exception
-                                    e.printStackTrace();
-                                }
-                            } else {
-
+//                            if (Version.equals("X3") || Version.contains("Q5")) {
+                            try {
+                                mOutputStream.write(data, 7, datalen);
+                                Thread.sleep(100);
+                            } catch (IOException e) {
+                                // TODO: handle exception
+                                e.printStackTrace();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
+                            String resString = "*#00000#*";
+                            try {
+                                respData = resString.getBytes("ISO-8859-1");
+                            } catch (Exception e) {
+                                // TODO: handle exception
+                            }
+                            udpSend(respData);
+                            fl = new File("sdcard/appbright.txt");
+                            try {
+                                fd_OutputStream = new FileOutputStream(fl);
+                                fd_OutputStream.write(data, 7, datalen);
+                                fd_OutputStream.close();
+                            } catch (Exception e) {
+                                // TODO: handle exception
+                                e.printStackTrace();
+                            }
+
 
                         }
                         break;
@@ -2455,7 +2467,7 @@ public class ServerUdp extends Thread {
                                     respondString += verStr;
 
                                 }
-                                Log.e(TAG, "respFPAGV: " + last);
+                                Log.e(TAG, "fpgaversion: " + last);
                                 //发送广播
                                 Intent intent0 = new Intent("com.listen.action.fpga_version");
                                 intent0.putExtra("fpgaversion", last);
@@ -2466,6 +2478,39 @@ public class ServerUdp extends Thread {
                         }
 
                         break;
+
+                        case GET_FPGA_STATE:
+
+                            try {
+                                mOutputStream.write("*#WL C800 000a 0bf4000000#*".getBytes("ISO-8859-1"), 0, 27);
+                                sleep(50);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            try {
+                                if (mInputStream.available() > 0)
+                                    len = mInputStream.read(rBuffer);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            if (((rBuffer[0] == '%') && (rBuffer[1] == '#') && (rBuffer[2] == 'W') && (rBuffer[3] == 'L') && (rBuffer[4] == '#') && (rBuffer[5] == '%'))
+                                    || ((rBuffer[0] == '%') && (rBuffer[1] == '#') && (rBuffer[2] == 'R') && (rBuffer[3] == 'L') && (rBuffer[4] == '#') && (rBuffer[5] == '%'))) {
+                                //发送广播在线
+                                Intent intent0 = new Intent("com.listen.action.fpga_state");
+                                intent0.putExtra("fpgastate", 0);
+                                MyApplication.context.sendBroadcast(intent0, null);
+                                Log.e(TAG, "fpgastate: online");
+                            } else {
+                                //发送广播离线
+                                Intent intent0 = new Intent("com.listen.action.fpga_state");
+                                intent0.putExtra("fpgastate", -1);
+                                MyApplication.context.sendBroadcast(intent0, null);
+                                Log.e(TAG, "fpgastate: offline");
+                            }
+                            break;
                         default:
                             break;
                     }
